@@ -3,54 +3,51 @@ package main_test
 import (
 	"crypto/sha256"
 	"fmt"
-	"time"
+	"testing"
 
 	"github.com/open-quantum-safe/liboqs-go/oqs"
 )
 
-func runKyberBenchmark(alg string) {
-	start := time.Now()
+func runKyberHandshake(alg string) error {
 	kem := oqs.KeyEncapsulation{}
 	if err := kem.Init(alg, nil); err != nil {
-		fmt.Printf("%-10s ❌ Init failed: %v\n", alg, err)
-		return
+		return err
 	}
 	defer kem.Clean()
 
-	publicKey, err := kem.GenerateKeyPair()
+	pubKey, err := kem.GenerateKeyPair()
 	if err != nil {
-		fmt.Printf("%-10s ❌ KeyGen failed: %v\n", alg, err)
-		return
+		return err
 	}
 
-	ciphertext, sharedEnc, err := kem.EncapSecret(publicKey)
+	ciphertext, sharedEnc, err := kem.EncapSecret(pubKey)
 	if err != nil {
-		fmt.Printf("%-10s ❌ Encapsulation failed: %v\n", alg, err)
-		return
+		return err
 	}
 
 	sharedDec, err := kem.DecapSecret(ciphertext)
 	if err != nil {
-		fmt.Printf("%-10s ❌ Decapsulation failed: %v\n", alg, err)
-		return
+		return err
 	}
 
 	if string(sharedEnc) != string(sharedDec) {
-		fmt.Printf("%-10s ❌ Shared secrets mismatch\n", alg)
-		return
+		return fmt.Errorf("shared secrets mismatch")
 	}
 
-	combined := sha256.Sum256(sharedDec)
-	elapsed := time.Since(start)
-	fmt.Printf("%-10s ✅ Success | Time: %4d ms | Hash: %.12x\n", alg, elapsed.Milliseconds(), combined)
+	_ = sha256.Sum256(sharedDec)
+	return nil
 }
 
-func main() {
-	fmt.Println("🔐 Kyber PQC Benchmark Comparison")
-	fmt.Println("-----------------------------------------")
-	runKyberBenchmark("Kyber512")
-	runKyberBenchmark("Kyber768")
-	runKyberBenchmark("Kyber1024")
-	fmt.Println("-----------------------------------------")
-	fmt.Println("Benchmark complete.")
+func BenchmarkKyber(b *testing.B) {
+	algos := []string{"Kyber512", "Kyber768", "Kyber1024"}
+
+	for _, alg := range algos {
+		b.Run(alg, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				if err := runKyberHandshake(alg); err != nil {
+					b.Fatalf("%s failed: %v", alg, err)
+				}
+			}
+		})
+	}
 }
