@@ -3,6 +3,7 @@ module golang.zx2c4.com/wireguard
 go 1.23.1
 
 require (
+	github.com/open-quantum-safe/liboqs-go v0.0.0-20250119172907-28b5301df438
 	golang.org/x/crypto v0.37.0
 	golang.org/x/net v0.39.0
 	golang.org/x/sys v0.32.0
