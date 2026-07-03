@@ -21,10 +21,6 @@ This project is a **team-based academic implementation** of a hybrid post-quantu
 - Ubuntu Linux
 - Bash
 
-## Acknowledgements
-
-This repository contains a **team academic project** that extends the open-source **WireGuard-Go** implementation for research and educational purposes.
-
 ## License
 
 This project is released under the MIT License.
